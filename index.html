@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+ <html lang="zh-CN">
+ <head>
+     <meta charset="UTF-8">
+     <title>简易待办清单</title>
+     <style>
+         *{box-sizing: border-box;margin:0;padding:0;}
+         body{max-width:600px;margin:50px auto;padding:0 20px;font-family:微软雅黑;}
+         .input-box{display:flex;gap:10px;margin-bottom:20px;}
+         #task-input{flex:1;padding:8px;font-size:16px;}
+         button{padding:8px 16px;cursor:pointer;}
+         .task-item{display:flex;align-items:center;gap:10px;padding:10px;border:1px solid #ccc;margin-bottom:8px;border-radius:4px;}
+         .finished{text-decoration:line-through;color:#999;}
+     </style>
+ </head>
+ <body>
+     <h2>待办清单</h2>
+     <div class="input-box">
+         <input type="text" id="task-input" placeholder="输入待办事项">
+         <button id="add-btn">添加</button>
+     </div>
+     <div id="task-list"></div>
+     <script>
+         const input = document.getElementById('task-input');
+         const addBtn = document.getElementById('add-btn');
+         const taskList = document.getElementById('task-list');
+         let taskArr = JSON.parse(localStorage.getItem('todo')) || [];
+         function render(){
+             taskList.innerHTML = '';
+             taskArr.forEach((item,index)=>{
+                 let div = document.createElement('div');
+                 div.className = 'task-item ' + (item.finish ? 'finished' : '');
+                 div.innerHTML = `
+                     <input type="checkbox" ${item.finish?'checked':''} data-id="${index}">
+                     <span>${item.text}</span>
+                     <button data-del="${index}">删除</button>
+                 `;
+                 taskList.appendChild(div);
+             })
+             bindEvent();
+         }
+         function saveData(){
+             localStorage.setItem('todo',JSON.stringify(taskArr));
+         }
+         function bindEvent(){
+             document.querySelectorAll('input[type=checkbox]').forEach(cb=>{
+                 cb.onchange = function(){
+                     let idx = this.dataset.id;
+                     taskArr[idx].finish = this.checked;
+                     saveData();render();
+                 }
+             })
+             document.querySelectorAll('button[data-del]').forEach(delBtn=>{
+                 delBtn.onclick = function(){
+                     let idx = this.dataset.del;
+                     taskArr.splice(idx,1);
+                     saveData();render();
+                 }
+             })
+         }
+         addBtn.onclick = function(){
+             let val = input.value.trim();
+             if(!val) return alert('内容不能为空');
+             taskArr.push({text:val,finish:false});
+             input.value = '';
+             saveData();render();
+         }
+         render();
+     </script>
+ </body>
+ </html>
